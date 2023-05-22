@@ -1,10 +1,18 @@
-package com.example.MINTOS.weather;
+package com.example.MINTOS.weather.service;
 
+import com.example.MINTOS.weather.model.Weather;
+import com.example.MINTOS.weather.repository.WeatherRepository;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.List;
 
 @Service
 public class WeatherService {
@@ -12,24 +20,65 @@ public class WeatherService {
     private final WebClient.Builder builder = WebClient.builder();
     private final JSONParser parser = new JSONParser();
 
+
     @Autowired
     public WeatherService(WeatherRepository weatherRepository) {
         this.weatherRepository = weatherRepository;
     }
 
     public Weather getWeather(String ip) {
-        Weather weather = new Weather();
-        addLocationOfIp(weather, ip);
-        addWeatherData(weather);
-        weatherRepository.save(weather);
+        Weather weather = weatherReadingExists(ip);
+        if(weather.getIp() == "Unknown"){
+            weather.setIp(ip);
+            addLocationOfIp(weather, ip);
+            addWeatherData(weather);
+            saveWeatherToDb(weather);
+        }
         return weather;
+    }
 
+    public List<Weather> getAllWeather(){
+        return weatherRepository.findAll();
+    }
+
+    @CacheEvict("weather_by_id")
+    private void saveWeatherToDb(Weather weather){
+        List<Weather> existingWeather = weatherRepository.findWeatherByIp(weather.getIp());
+        for (Weather weatherRecord: existingWeather
+             ) {
+            if(weatherRecord.getTime() == weather.getTime()){
+                return;
+            }
+        }
+        weatherRepository.save(weather);
+    }
+    @Cacheable("weather_by_id")
+    private List<Weather> getAllWeatherByIp(String ip){
+        return weatherRepository.findWeatherByIp(ip);
+    }
+
+    private Weather weatherReadingExists(String ip){
+        Weather weather = new Weather();
+        List<Weather> weatherByIp = getAllWeatherByIp(ip);
+
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(Calendar.getInstance().getTime());
+        String [] timeStampParts = timeStamp.split("_");
+        String timeNow = timeStampParts[1];
+        String monthNow = timeStampParts[0];
+        String [] timeParts = timeNow.split(":");
+
+        for (Weather weatherFromIp:weatherByIp) {
+            if(weatherFromIp.getTime().equals(timeNow) || weatherFromIp.getTime().contains(monthNow) && timeParts[0].equals(weatherFromIp.getTime().subSequence(11,13))){
+                return  weatherFromIp;
+            }
+        }
+        weather.setTime(timeStamp);
+        return weather;
 
     }
 
+
     private void addLocationOfIp(Weather weather, String ip){
-        System.out.println("IPPPPPPPPPPPPPPPPP IS");
-        System.out.println(ip);
         String location = builder.build().get().uri("https://ipapi.co/"+ip+"/json").retrieve()
                 .bodyToMono(String.class).block();
         try {
@@ -68,7 +117,7 @@ public class WeatherService {
         }
     }
 
-    private String checkWeatherCode(Integer weatherCode){
+    public String checkWeatherCode(Integer weatherCode){
         if(weatherCode>0 && weatherCode<4){
             return "Cloudy";
         }else if(weatherCode>44 && weatherCode<49){

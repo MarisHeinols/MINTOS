@@ -1,12 +1,11 @@
-package com.example.MINTOS.weather;
+package com.example.MINTOS.weather.repository;
 
+import com.example.MINTOS.weather.model.Weather;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 @Repository
 public interface WeatherRepository extends JpaRepository<Weather, Long> {
-    List<Weather> findWeatherByCity(String city);
-
+    List<Weather> findWeatherByIp(String ip);
 }
