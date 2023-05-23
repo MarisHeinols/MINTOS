@@ -43,13 +43,6 @@ public class WeatherService {
 
     @CacheEvict("weather_by_id")
     private void saveWeatherToDb(Weather weather){
-        List<Weather> existingWeather = weatherRepository.findWeatherByIp(weather.getIp());
-        for (Weather weatherRecord: existingWeather
-             ) {
-            if(weatherRecord.getTime() == weather.getTime()){
-                return;
-            }
-        }
         weatherRepository.save(weather);
     }
     @Cacheable("weather_by_id")

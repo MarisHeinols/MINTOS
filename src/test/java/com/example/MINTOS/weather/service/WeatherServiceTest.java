@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ContextConfiguration;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 
@@ -39,6 +38,7 @@ class WeatherServiceTest {
 
     @Test
     void canGetWeather() {
+        // Check if returns data for unknown ip
         Weather testWeather =  weatherService.getWeather("0.0.0.0");
         assertEquals(testWeather.getIp(), "0.0.0.0");
         assertEquals(testWeather.getCity(), "Unknown");
@@ -46,6 +46,7 @@ class WeatherServiceTest {
     @Test
     void canGetActualIpWeather() {
         Weather testWeather =  weatherService.getWeather(googleIp);
+        // Check if values that don`t change day by day are updated
         assertEquals(testWeather.getIp(), weather.getIp());
         assertEquals(testWeather.getCity(), weather.getCity());
         assertEquals(testWeather.getCountry(), weather.getCountry());
@@ -55,15 +56,6 @@ class WeatherServiceTest {
     void canGetAllWeather() {
         weatherService.getAllWeather();
         verify(weatherRepository).findAll();
-    }
-    @Test
-    void canUpdateValues() {
-        Weather testWeather = weatherService.getWeather("0.0.0.0");
-        assertEquals(testWeather.getIp(), "0.0.0.0");
-    }
-    @Test
-    void valuesNotUpdated() {
-        Weather testWeather = weatherService.getWeather("0.0.0.0");
     }
 
     @Test
@@ -81,6 +73,7 @@ class WeatherServiceTest {
         String result3 = weatherService.checkWeatherCode(95);
         assertEquals("Thunderstorm", result3);
 
+        // Test default weather code
         String result4 = weatherService.checkWeatherCode(0);
         assertEquals("Clear", result4);
 
