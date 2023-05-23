@@ -23,7 +23,6 @@ public class Weather {
     private Double latitude;
     private String weather;
     private String temperature;
-
     private String time;
 
     public Weather() {
