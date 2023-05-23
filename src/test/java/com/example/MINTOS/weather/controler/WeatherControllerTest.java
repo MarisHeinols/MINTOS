@@ -63,7 +63,7 @@ class WeatherControllerTest {
     void getAllWeather() throws Exception {
         when(weatherService.getAllWeather()).thenReturn(weatherList);
         mockMvc.perform(MockMvcRequestBuilders
-                        .get(url)
+                        .get(url+"/all")
                         .content(asJsonString(weatherList))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))

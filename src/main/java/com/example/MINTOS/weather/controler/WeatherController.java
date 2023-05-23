@@ -22,7 +22,6 @@ public class WeatherController {
     }
     @GetMapping
     public Weather getWeather(HttpServletRequest request) {
-        System.out.println(request);
         String clientIpAddress = requestService.getClientsIpAddress(request);
         return weatherService.getWeather(clientIpAddress);
     }
